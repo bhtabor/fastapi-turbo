@@ -1,4 +1,4 @@
-"""FastAPI dependencies for reading Hotwire-related request signals."""
+"""FastAPI dependencies for reading Turbo-related request signals."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ async def turbo_context(request: Request) -> TurboContext:
 
         from typing import Annotated
         from fastapi import Depends
-        from fastapi_hotwire import TurboContext, turbo_context
+        from fastapi_turbo import TurboContext, turbo_context
 
         @app.post("/items")
         async def create(turbo: Annotated[TurboContext, Depends(turbo_context)]):

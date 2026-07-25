@@ -1,4 +1,4 @@
-"""Session-backed flash messages with a Hotwire-native turbo-stream variant.
+"""Session-backed flash messages with a Turbo-native turbo-stream variant.
 
 Decoupled from any specific session middleware. Requires only that
 ``request.session`` exist and behave like a ``MutableMapping[str, Any]``
@@ -148,7 +148,7 @@ def _require_session(request: Request) -> dict[str, Any]:
         return request.session  # type: ignore[no-any-return]
     except AssertionError as exc:
         raise RuntimeError(
-            "fastapi-hotwire flash requires a session: install "
+            "fastapi-turbo flash requires a session: install "
             "starlette.middleware.sessions.SessionMiddleware (or another "
             "middleware that exposes request.session as a MutableMapping)."
         ) from exc

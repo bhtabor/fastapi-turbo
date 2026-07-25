@@ -3,9 +3,9 @@ build-backend = "hatchling.build"
 requires = [ "hatchling" ]
 
 [project]
-name = "fastapi-hotwire"
-version = "0.3.0"
-description = "Hotwire (Turbo) integration for FastAPI — turbo-stream responses, frame detection, block rendering, flash, and test helpers."
+name = "fastapi-turbo"
+version = "0.1.0"
+description = "Hotwire Turbo integration for FastAPI — turbo-stream responses, frame detection, flash messages, and test helpers."
 readme = "README.md"
 keywords = [
   "fastapi",
@@ -13,7 +13,6 @@ keywords = [
   "html",
   "jinja2",
   "server-rendered",
-  "stimulus",
   "turbo",
 ]
 license = "MIT"
@@ -44,10 +43,10 @@ dependencies = [
   "markupsafe>=3",
 ]
 optional-dependencies.forms = [ "pydantic>=2.13" ]
-urls.Changelog = "https://github.com/socialpyre/fastapi-hotwire/blob/main/CHANGELOG.md"
-urls.Homepage = "https://github.com/socialpyre/fastapi-hotwire"
-urls.Issues = "https://github.com/socialpyre/fastapi-hotwire/issues"
-urls.Source = "https://github.com/socialpyre/fastapi-hotwire"
+urls.Changelog = "https://github.com/bhtabor/fastapi-turbo/blob/main/CHANGELOG.md"
+urls.Homepage = "https://github.com/bhtabor/fastapi-turbo"
+urls.Issues = "https://github.com/bhtabor/fastapi-turbo/issues"
+urls.Source = "https://github.com/bhtabor/fastapi-turbo"
 
 [dependency-groups]
 dev = [
@@ -60,7 +59,7 @@ dev = [
 ]
 
 [tool.hatch]
-build.targets.wheel.packages = [ "fastapi_hotwire" ]
+build.targets.wheel.packages = [ "fastapi_turbo" ]
 
 [tool.ruff]
 target-version = "py310"

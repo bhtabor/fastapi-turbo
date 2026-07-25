@@ -1,4 +1,4 @@
-"""Tests for ``fastapi_hotwire.flash``."""
+"""Tests for ``fastapi_turbo.flash``."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from starlette.middleware.sessions import SessionMiddleware
 
-from fastapi_hotwire import FlashMessage, flash, get_flashed
-from fastapi_hotwire.testing import assert_turbo_stream, parse_streams
+from fastapi_turbo import FlashMessage, flash, get_flashed
+from fastapi_turbo.testing import assert_turbo_stream, parse_streams
 
 
 @pytest.fixture

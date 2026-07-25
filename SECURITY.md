@@ -1,18 +1,18 @@
 # Security policy
 
-`fastapi-hotwire` is shared under the MIT license. There is no commercial support, no SLA, and no warranty — see [LICENSE](LICENSE). With that in mind, security findings are still welcome, since users of the package benefit when they're addressed.
+`fastapi-turbo` is shared under the MIT license. There is no commercial support, no SLA, and no warranty — see [LICENSE](LICENSE). With that in mind, security findings are still welcome, since users of the package benefit when they're addressed.
 
 ## Reporting a finding
 
 Please report findings **privately**, not in public issues:
 
-- Open a private advisory via GitHub's [Report a vulnerability](https://github.com/socialpyre/fastapi-hotwire/security/advisories/new) form.
+- Open a private advisory via GitHub's [Report a vulnerability](https://github.com/bhtabor/fastapi-turbo/security/advisories/new) form.
 
 Helpful information to include:
 
 - A description of the issue and its impact.
 - Steps to reproduce, ideally a minimal FastAPI app or test case.
-- Affected version(s) of `fastapi-hotwire` and Python.
+- Affected version(s) of `fastapi-turbo` and Python.
 - Whether the finding is already public somewhere.
 
 Reports will be reviewed when bandwidth allows. There is no committed turnaround time — this project is shared as-is. Findings that affect the latest released version are most likely to get attention.
@@ -25,9 +25,9 @@ Only the **latest released version** is supported. Older versions will not recei
 
 The package ships a few primitives where security expectations are explicit and bugs are most consequential:
 
-- **`fastapi_hotwire.streams`** — the trust contract for the `html` argument (raw, un-escaped) and the attribute-escaping path for `target` / `targets` / `request_id`.
-- **`fastapi_hotwire.templates.HotwireTemplates`** — the autoescape assertion at construction time.
-- **`fastapi_hotwire.flash`** — flash content rides in a signed-but-not-encrypted session cookie; the doc strings call out what is and isn't safe to put there.
+- **`fastapi_turbo.streams`** — the trust contract for the `html` argument (raw, un-escaped) and the attribute-escaping path for `target` / `targets` / `request_id`.
+- **`fastapi_turbo.templates.TurboTemplates`** — the autoescape assertion at construction time.
+- **`fastapi_turbo.flash`** — flash content rides in a signed-but-not-encrypted session cookie; the doc strings call out what is and isn't safe to put there.
 
 If you find a way to bypass any of those guarantees, that's exactly the kind of report that's most useful.
 

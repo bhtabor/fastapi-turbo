@@ -1,4 +1,4 @@
-"""Minimal fastapi-hotwire demo: a todo list with turbo-stream append/remove.
+"""Minimal fastapi-turbo demo: a todo list with turbo-stream append/remove.
 
 Run with::
 
@@ -14,10 +14,10 @@ from pathlib import Path
 
 from fastapi import FastAPI, Form, Request
 
-from fastapi_hotwire import HotwireTemplates, TurboStreamResponse, streams
+from fastapi_turbo import TurboStreamResponse, TurboTemplates, streams
 
 app = FastAPI()
-templates = HotwireTemplates(directory=str(Path(__file__).parent / "templates"), flashes=False)
+templates = TurboTemplates(directory=str(Path(__file__).parent / "templates"), flashes=False)
 
 # In-memory store for the demo. Real apps would use a database.
 _id = count(1)
@@ -35,8 +35,7 @@ def create(request: Request, text: str = Form(...)):
     todos.append(todo)
     return templates.render_stream(
         request,
-        "index.html",
-        "todo_row",
+        "_todo_row.html",
         action="append",
         target="todos",
         todo=todo,

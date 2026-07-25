@@ -1,4 +1,4 @@
-"""Tests for ``fastapi_hotwire.forms``."""
+"""Tests for ``fastapi_turbo.forms``."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field, ValidationError
 from starlette.middleware.sessions import SessionMiddleware
 
-from fastapi_hotwire import HotwireTemplates
-from fastapi_hotwire.forms import validation_error_stream
-from fastapi_hotwire.testing import assert_turbo_stream, parse_streams
+from fastapi_turbo import TurboTemplates
+from fastapi_turbo.forms import validation_error_stream
+from fastapi_turbo.testing import assert_turbo_stream, parse_streams
 
 
 class _Form(BaseModel):
@@ -23,20 +23,18 @@ class _Form(BaseModel):
 @pytest.fixture
 def templates_dir(tmp_path: Path) -> Path:
     (tmp_path / "form.html").write_text(
-        "{% block form %}"
         "<form>"
         '{% if errors.name %}<p class="err name">{{ errors.name }}</p>{% endif %}'
         '{% if errors.email %}<p class="err email">{{ errors.email }}</p>{% endif %}'
         "<input name=\"name\" value=\"{{ form_data.get('name', '') }}\">"
         "<input name=\"email\" value=\"{{ form_data.get('email', '') }}\">"
         "</form>"
-        "{% endblock %}"
     )
     return tmp_path
 
 
-def test_validation_error_stream_renders_block(templates_dir: Path):
-    templates = HotwireTemplates(directory=str(templates_dir), flashes=False)
+def test_validation_error_stream_renders_partial(templates_dir: Path):
+    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
     app = FastAPI()
 
     @app.post("/submit")
@@ -48,7 +46,6 @@ def test_validation_error_stream_renders_block(templates_dir: Path):
                 exc,
                 templates=templates,
                 template="form.html",
-                block="form",
                 target="contact-form",
                 request=request,
             )
@@ -67,7 +64,7 @@ def test_validation_error_stream_renders_block(templates_dir: Path):
 
 
 def test_validation_error_stream_preserves_form_data(templates_dir: Path):
-    templates = HotwireTemplates(directory=str(templates_dir), flashes=False)
+    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
     app = FastAPI()
     app.add_middleware(SessionMiddleware, secret_key="x")
 
@@ -81,7 +78,6 @@ def test_validation_error_stream_preserves_form_data(templates_dir: Path):
                 exc,
                 templates=templates,
                 template="form.html",
-                block="form",
                 target="contact-form",
                 request=request,
                 form_data=raw,
@@ -95,7 +91,7 @@ def test_validation_error_stream_preserves_form_data(templates_dir: Path):
 
 
 def test_error_formatter_override(templates_dir: Path):
-    templates = HotwireTemplates(directory=str(templates_dir), flashes=False)
+    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
     app = FastAPI()
 
     def my_formatter(exc):
@@ -110,7 +106,6 @@ def test_error_formatter_override(templates_dir: Path):
                 exc,
                 templates=templates,
                 template="form.html",
-                block="form",
                 target="contact-form",
                 request=request,
                 error_formatter=my_formatter,

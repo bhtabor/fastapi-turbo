@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>fastapi-hotwire minimal demo</title>
+    <title>fastapi-turbo minimal demo</title>
     <script
       type="module"
       src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.js"
@@ -17,14 +17,7 @@
     </form>
 
     <ul id="todos">
-      {% for todo in todos %} {% block todo_row scoped %}
-      <li id="todo-{{ todo.id }}">
-        {{ todo.text }}
-        <form action="/todos/{{ todo.id }}/delete" method="post" style="display: inline">
-          <button type="submit">x</button>
-        </form>
-      </li>
-      {% endblock %} {% endfor %}
+      {% for todo in todos %}{% include "_todo_row.html" %}{% endfor %}
     </ul>
   </body>
 </html>

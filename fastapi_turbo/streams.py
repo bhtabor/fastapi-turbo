@@ -13,7 +13,7 @@ markup, so callers own the safety of that string:
 
 - Jinja2 output with autoescape on (the default in
   :class:`Jinja2Templates` and required by
-  :class:`HotwireTemplates`) is safe.
+  :class:`TurboTemplates`) is safe.
 - Static, hand-written HTML is safe.
 - A user-controlled string interpolated without escaping is **not**
   safe — ``streams.append(user_input, target="chat")`` is an XSS.

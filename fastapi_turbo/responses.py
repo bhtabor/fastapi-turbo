@@ -1,4 +1,4 @@
-"""Response classes for Hotwire-aware endpoints."""
+"""Response classes for Turbo-aware endpoints."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ class TurboStreamResponse(Response):
     client recognizes the body as stream actions to apply rather than
     HTML to render. ``content`` accepts a single string of stream HTML
     or an iterable of strings (e.g. the return values from
-    ``fastapi_hotwire.streams.*``), which are joined verbatim — no
+    ``fastapi_turbo.streams.*``), which are joined verbatim — no
     separator, no extra escaping, since each builder already produces
     well-formed ``<turbo-stream>`` markup.
 

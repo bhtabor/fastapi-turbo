@@ -10,7 +10,7 @@ labels: bug
 
 ## Reproduction
 
-<!-- Smallest possible code snippet (FastAPI app + the relevant fastapi-hotwire call) that triggers the issue. -->
+<!-- Smallest possible code snippet (FastAPI app + the relevant fastapi-turbo call) that triggers the issue. -->
 
 ```python
 ```
@@ -22,7 +22,7 @@ labels: bug
 
 ## Environment
 
-- `fastapi-hotwire` version:
+- `fastapi-turbo` version:
 - `fastapi` version:
 - `jinja2` version:
 - Python version:

@@ -1,0 +1,6 @@
+<li id="todo-{{ todo.id }}">
+  {{ todo.text }}
+  <form action="/todos/{{ todo.id }}/delete" method="post" style="display: inline">
+    <button type="submit">x</button>
+  </form>
+</li>

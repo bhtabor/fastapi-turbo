@@ -1,11 +1,11 @@
-"""Tests for ``fastapi_hotwire.responses``."""
+"""Tests for ``fastapi_turbo.responses``."""
 
 from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from fastapi_hotwire import TurboStreamResponse
+from fastapi_turbo import TurboStreamResponse
 
 
 def test_media_type_set_on_class():

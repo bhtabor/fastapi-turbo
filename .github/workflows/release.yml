@@ -27,7 +27,7 @@ jobs:
       id-token: write     # PyPI Trusted Publishing OIDC
     environment:
       name: pypi
-      url: https://pypi.org/p/fastapi-hotwire
+      url: https://pypi.org/p/fastapi-turbo
     outputs:
       released: ${{ steps.release.outputs.released }}
       version: ${{ steps.release.outputs.version }}

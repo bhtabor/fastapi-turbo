@@ -1,4 +1,4 @@
-"""Tests for ``fastapi_hotwire.deps``."""
+"""Tests for ``fastapi_turbo.deps``."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
-from fastapi_hotwire import TurboContext, turbo_context
+from fastapi_turbo import TurboContext, turbo_context
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def client():
     return TestClient(app)
 
 
-def test_no_hotwire_headers(client):
+def test_no_turbo_headers(client):
     body = client.get("/").json()
     assert body == {
         "is_frame": False,

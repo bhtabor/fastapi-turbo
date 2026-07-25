@@ -1,4 +1,4 @@
-"""Tests for ``fastapi_hotwire.testing``."""
+"""Tests for ``fastapi_turbo.testing``."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
-from fastapi_hotwire import TurboStreamResponse, streams
-from fastapi_hotwire.testing import (
+from fastapi_turbo import TurboStreamResponse, streams
+from fastapi_turbo.testing import (
     StreamAction,
     assert_turbo_frame,
     assert_turbo_stream,

@@ -1,4 +1,4 @@
-"""pytest helpers for asserting on Hotwire responses.
+"""pytest helpers for asserting on Turbo responses.
 
 The parser uses a narrow regex against ``<turbo-stream>`` markup that
 this package generates — it is not a general-purpose HTML parser. The

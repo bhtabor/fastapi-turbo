@@ -1,15 +1,21 @@
-"""Hotwire-aware ``Jinja2Templates`` wrapper.
+"""Turbo-aware ``Jinja2Templates`` wrapper.
 
 Adds three things to Starlette's ``Jinja2Templates``:
 
-1. :meth:`HotwireTemplates.render_block` returns an ``HTMLResponse``
-   containing only one ``{% block %}`` — useful for
-   ``<turbo-frame>`` requests.
-2. :meth:`HotwireTemplates.render_stream` wraps a rendered block in a
+1. :meth:`TurboTemplates.render_fragment` returns an ``HTMLResponse``
+   containing one rendered template — useful for returning a partial
+   that carries a matching ``<turbo-frame>`` on frame requests.
+2. :meth:`TurboTemplates.render_stream` wraps a rendered template in a
    :class:`TurboStreamResponse` for the chosen Turbo Stream action.
 3. A ``flashes`` context processor that drains
    ``request.session["_flash"]`` so any rendered template sees the
    queue automatically.
+
+Fragment strategy is deliberately the application's business: point
+these helpers at partial template *files*. If you prefer carving
+fragments out of one page template with ``{% block %}``, render the
+block to a string yourself (e.g. with ``jinja2-fragments``) and pass
+it to the :mod:`fastapi_turbo.streams` builders directly.
 
 Application-specific globals (theme, brand, asset hashes, analytics)
 belong in the ``context_processors=`` argument so they stay in app
@@ -26,20 +32,19 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from starlette.responses import HTMLResponse
 
-from .blocks import Jinja2BlockRenderer
 from .flash import flashes_context_processor
 from .responses import TurboStreamResponse
 from .streams import _stream
 
-__all__ = ["HotwireTemplates"]
+__all__ = ["TurboTemplates"]
 
 
 ContextProcessor = Callable[[Request], dict[str, Any]]
 PathLike = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
 
 
-class HotwireTemplates(Jinja2Templates):
-    """``Jinja2Templates`` with Hotwire helpers and a flash context processor.
+class TurboTemplates(Jinja2Templates):
+    """``Jinja2Templates`` with Turbo helpers and a flash context processor.
 
     Construct as you would Starlette's ``Jinja2Templates``, plus an
     optional ``context_processors=[...]`` list of callables that take a
@@ -48,7 +53,7 @@ class HotwireTemplates(Jinja2Templates):
     out (for tests or APIs that don't want session coupling).
 
     The constructor checks ``self.env.autoescape`` and refuses to build
-    if it's falsy at construction time — block output is interpolated
+    if it's falsy at construction time — rendered output is interpolated
     into Turbo Stream markup verbatim, so disabling autoescape would
     turn any user-supplied template variable into an XSS sink. Note
     that callers can still flip ``self.env.autoescape`` after
@@ -72,44 +77,40 @@ class HotwireTemplates(Jinja2Templates):
             super().__init__(directory=directory, context_processors=procs, **kwargs)
         if not self.env.autoescape:
             raise RuntimeError(
-                "HotwireTemplates requires Jinja2 autoescape to be enabled. "
-                "Block output is interpolated into Turbo Stream markup without "
-                "additional escaping; disabling autoescape would turn any "
-                "user-supplied template variable into an XSS sink."
+                "TurboTemplates requires Jinja2 autoescape to be enabled. "
+                "Rendered output is interpolated into Turbo Stream markup "
+                "without additional escaping; disabling autoescape would turn "
+                "any user-supplied template variable into an XSS sink."
             )
-        self.block_renderer = Jinja2BlockRenderer(self.env)
         self._context_processors: list[ContextProcessor] = procs
 
-    def render_block(
+    def render_fragment(
         self,
         request: Request,
         name: str,
-        block: str,
         *,
         status_code: int = 200,
         headers: dict[str, str] | None = None,
         **context: Any,
     ) -> HTMLResponse:
-        """Render a single ``{% block %}`` and return an ``HTMLResponse``."""
-        body = self.render_block_string(request, name, block, **context)
+        """Render a template (typically a partial) as an ``HTMLResponse``."""
+        body = self.render_string(request, name, **context)
         return HTMLResponse(body, status_code=status_code, headers=headers)
 
-    def render_block_string(
+    def render_string(
         self,
         request: Request,
         name: str,
-        block: str,
         **context: Any,
     ) -> str:
-        """Render a single ``{% block %}`` and return the raw HTML string."""
+        """Render a template with the merged context to a raw HTML string."""
         merged = self._merged_context(request, context)
-        return self.block_renderer.render_block(name, block, merged)
+        return self.env.get_template(name).render(merged)
 
     def render_stream(
         self,
         request: Request,
         name: str,
-        block: str,
         *,
         action: str = "replace",
         target: str | None = None,
@@ -118,8 +119,9 @@ class HotwireTemplates(Jinja2Templates):
         headers: dict[str, str] | None = None,
         **context: Any,
     ) -> TurboStreamResponse:
-        """Render a single block and wrap it in a Turbo Stream action."""
-        body = self.render_block_string(request, name, block, **context)
+        """Render a template (typically a partial) and wrap it in a Turbo
+        Stream action."""
+        body = self.render_string(request, name, **context)
         if action == "remove":
             stream = _stream("remove", target=target, targets=targets, html=None)
         else:

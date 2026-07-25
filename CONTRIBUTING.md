@@ -1,4 +1,4 @@
-# Contributing to fastapi-hotwire
+# Contributing to fastapi-turbo
 
 Thanks for thinking about contributing! Issues and PRs are welcome — please file an issue first for anything bigger than a typo or a docs fix so we can align on scope before you write code.
 
@@ -7,8 +7,8 @@ Thanks for thinking about contributing! Issues and PRs are welcome — please fi
 You'll need [`uv`](https://docs.astral.sh/uv/) installed.
 
 ```bash
-git clone https://github.com/socialpyre/fastapi-hotwire.git
-cd fastapi-hotwire
+git clone https://github.com/bhtabor/fastapi-turbo.git
+cd fastapi-turbo
 uv sync --all-extras --group dev
 uv run pytest
 ```
@@ -58,7 +58,7 @@ The pre-commit hook validates this on every commit. CI also re-validates on PR.
 
 - Every feature commit needs a test. The existing test files are organized one-per-module — keep that pattern.
 - Tests use `httpx`/`fastapi.testclient.TestClient` against an in-process FastAPI app. No live server needed.
-- For Hotwire-shaped responses, use the helpers from `fastapi_hotwire.testing` (`assert_turbo_stream`, `parse_streams`, `assert_turbo_frame`, `turbo_frame_request`, `turbo_stream_request`) rather than asserting on raw HTML.
+- For Hotwire-shaped responses, use the helpers from `fastapi_turbo.testing` (`assert_turbo_stream`, `parse_streams`, `assert_turbo_frame`, `turbo_frame_request`, `turbo_stream_request`) rather than asserting on raw HTML.
 - Run a single file with `uv run pytest tests/test_streams.py`, a single test with `-k partial_name`.
 
 ## Scope
@@ -80,7 +80,7 @@ If a push has only `chore:` / `docs:` / `ci:` / `test:` / `refactor:` commits, n
 
 ## Repo configuration (maintainer setup)
 
-This section is a one-time runbook for whoever provisions the public GitHub repo. Contributors don't need to read it. The configuration here is what was applied to `socialpyre/fastapi-hotwire` and is a sensible default for future Pyre OSS projects.
+This section is a one-time runbook for whoever provisions the public GitHub repo. Contributors don't need to read it. The configuration here is what was applied to `bhtabor/fastapi-turbo` and is a sensible default for similar OSS projects.
 
 All steps assume you have `gh` authenticated against an account with admin on the repo.
 
@@ -88,11 +88,11 @@ All steps assume you have `gh` authenticated against an account with admin on th
 
 | What | Why | How |
 | --- | --- | --- |
-| Description | One-sentence summary that surfaces in GitHub search and the repo card | `gh repo edit socialpyre/fastapi-hotwire --description "..."` |
-| Homepage URL | Sends visitors to PyPI for install instructions | `gh repo edit socialpyre/fastapi-hotwire --homepage "https://pypi.org/project/fastapi-hotwire/"` |
-| Topics | Discoverability — GitHub topic pages and search filters | `gh repo edit socialpyre/fastapi-hotwire --add-topic fastapi --add-topic hotwire --add-topic turbo --add-topic python --add-topic jinja2 --add-topic server-rendered --add-topic stimulus --add-topic web-framework` |
-| Disable Wiki | Unused; Wiki collects spam if left open | `gh repo edit socialpyre/fastapi-hotwire --enable-wiki=false` |
-| Disable Projects | Unused | `gh repo edit socialpyre/fastapi-hotwire --enable-projects=false` |
+| Description | One-sentence summary that surfaces in GitHub search and the repo card | `gh repo edit bhtabor/fastapi-turbo --description "..."` |
+| Homepage URL | Sends visitors to PyPI for install instructions | `gh repo edit bhtabor/fastapi-turbo --homepage "https://pypi.org/project/fastapi-turbo/"` |
+| Topics | Discoverability — GitHub topic pages and search filters | `gh repo edit bhtabor/fastapi-turbo --add-topic fastapi --add-topic hotwire --add-topic turbo --add-topic python --add-topic jinja2 --add-topic server-rendered --add-topic stimulus --add-topic web-framework` |
+| Disable Wiki | Unused; Wiki collects spam if left open | `gh repo edit bhtabor/fastapi-turbo --enable-wiki=false` |
+| Disable Projects | Unused | `gh repo edit bhtabor/fastapi-turbo --enable-projects=false` |
 
 ### 2. Branch protection on `main`
 
@@ -107,7 +107,7 @@ The release workflow pushes a `chore(release): X.Y.Z [skip ci]` commit and a `vX
 Apply via the GitHub UI (Settings → Branches → Add rule) or via `gh api`:
 
 ```bash
-gh api -X PUT repos/socialpyre/fastapi-hotwire/branches/main/protection \
+gh api -X PUT repos/bhtabor/fastapi-turbo/branches/main/protection \
   -H "Accept: application/vnd.github+json" \
   -f required_status_checks=null \
   -f enforce_admins=false \
@@ -150,9 +150,9 @@ Confirm the publisher binding at https://pypi.org/manage/account/publishing/. Th
 
 | Field | Value |
 | --- | --- |
-| PyPI project | `fastapi-hotwire` |
-| Owner | `socialpyre` |
-| Repository | `fastapi-hotwire` |
+| PyPI project | `fastapi-turbo` |
+| Owner | `bhtabor` |
+| Repository | `fastapi-turbo` |
 | Workflow | `release.yml` |
 | Environment | `pypi` |
 
@@ -163,8 +163,8 @@ Once the first release runs, the pending publisher is converted to a real publis
 After all of the above:
 
 ```bash
-gh repo view socialpyre/fastapi-hotwire --json description,homepageUrl,repositoryTopics,hasWikiEnabled,hasProjectsEnabled
-gh api repos/socialpyre/fastapi-hotwire/branches/main/protection --jq '{linear: .required_linear_history.enabled, signed: .required_signatures.enabled, force: .allow_force_pushes.enabled, delete: .allow_deletions.enabled}'
+gh repo view bhtabor/fastapi-turbo --json description,homepageUrl,repositoryTopics,hasWikiEnabled,hasProjectsEnabled
+gh api repos/bhtabor/fastapi-turbo/branches/main/protection --jq '{linear: .required_linear_history.enabled, signed: .required_signatures.enabled, force: .allow_force_pushes.enabled, delete: .allow_deletions.enabled}'
 ```
 
 Both should return the configured values without error.

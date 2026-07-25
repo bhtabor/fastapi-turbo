@@ -1,4 +1,4 @@
-"""fastapi-hotwire flash demo: session-backed flash + Hotwire-native variant.
+"""fastapi-turbo flash demo: session-backed flash + Turbo-native variant.
 
 Run with::
 
@@ -10,7 +10,7 @@ This example demonstrates two flash flows:
 
 1. **PRG flash** — POST form, redirect with flash queued in the session,
    GET serves the page with the flash rendered into the layout.
-2. **Hotwire-native flash** — POST returns a turbo-stream that appends
+2. **Turbo-native flash** — POST returns a turbo-stream that appends
    the flash partial to the ``#flash`` region without a redirect.
 """
 
@@ -22,12 +22,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-from fastapi_hotwire import HotwireTemplates, flash
+from fastapi_turbo import TurboTemplates, flash
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="example-secret-do-not-use-in-prod")
 
-templates = HotwireTemplates(directory=str(Path(__file__).parent / "templates"))
+templates = TurboTemplates(directory=str(Path(__file__).parent / "templates"))
 
 
 @app.get("/")

@@ -21,7 +21,7 @@
 - [ ] `uv run pytest` passes locally.
 - [ ] `uvx ruff check . && uvx ruff format --check . && uvx ty check .` are clean.
 - [ ] If this is a `feat:` / `fix:`, there's a test that covers the new behavior or regression.
-- [ ] Public-API additions are exported from `fastapi_hotwire/__init__.py` and listed in the README's "What's in the box" table.
+- [ ] Public-API additions are exported from `fastapi_turbo/__init__.py` and listed in the README's "What's in the box" table.
 - [ ] No new dependencies were added without a note in the PR body explaining why.
 
 ## Notes for reviewers

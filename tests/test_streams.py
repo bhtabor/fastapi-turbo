@@ -1,11 +1,11 @@
-"""Tests for ``fastapi_hotwire.streams``."""
+"""Tests for ``fastapi_turbo.streams``."""
 
 from __future__ import annotations
 
 import pytest
 from markupsafe import Markup
 
-from fastapi_hotwire import streams
+from fastapi_turbo import streams
 
 
 @pytest.mark.parametrize(

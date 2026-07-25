@@ -1,7 +1,7 @@
 """Form helpers — Pydantic validation-error → Turbo Stream replacement.
 
 :func:`validation_error_stream` turns a Pydantic ``ValidationError`` into
-a turbo-stream that replaces only the form's block — no full-page
+a turbo-stream that replaces only the form's partial — no full-page
 reload, no scroll loss.
 """
 
@@ -18,7 +18,7 @@ from .streams import _stream
 if TYPE_CHECKING:
     from pydantic import ValidationError
 
-    from .templates import HotwireTemplates
+    from .templates import TurboTemplates
 
 __all__ = [
     "validation_error_stream",
@@ -28,9 +28,8 @@ __all__ = [
 def validation_error_stream(
     exc: ValidationError,
     *,
-    templates: HotwireTemplates,
+    templates: TurboTemplates,
     template: str,
-    block: str,
     target: str,
     request: Request,
     form_data: Mapping[str, Any] | None = None,
@@ -38,7 +37,7 @@ def validation_error_stream(
     extra_context: Mapping[str, Any] | None = None,
     action: str = "replace",
 ) -> TurboStreamResponse:
-    """Render the form block with errors as a Turbo Stream.
+    """Render the form partial with errors as a Turbo Stream.
 
     The rendered template receives:
 
@@ -61,7 +60,7 @@ def validation_error_stream(
     context = dict(extra_context or {})
     context.update({"errors": errors, "form_data": resolved_form_data})
 
-    body = templates.render_block_string(request, template, block, **context)
+    body = templates.render_string(request, template, **context)
     stream = _stream(action, target=target, targets=None, html=body)
     return TurboStreamResponse(stream, status_code=422)
 

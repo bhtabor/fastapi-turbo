@@ -1,12 +1,12 @@
 # Minimal example
 
-A todo list with turbo-stream append + remove — the simplest possible `fastapi-hotwire` integration.
+A todo list with turbo-stream append + remove — the simplest possible `fastapi-turbo` integration.
 
 ## Run
 
 ```bash
 cd examples/minimal
-uv run --with fastapi-hotwire --with uvicorn uvicorn app:app --reload
+uv run --with fastapi-turbo --with uvicorn uvicorn app:app --reload
 ```
 
 Then open http://127.0.0.1:8000.

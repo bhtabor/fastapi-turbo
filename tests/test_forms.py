@@ -34,7 +34,7 @@ def templates_dir(tmp_path: Path) -> Path:
 
 
 def test_validation_error_stream_renders_partial(templates_dir: Path):
-    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
+    templates = TurboTemplates(directory=str(templates_dir))
     app = FastAPI()
 
     @app.post("/submit")
@@ -64,7 +64,7 @@ def test_validation_error_stream_renders_partial(templates_dir: Path):
 
 
 def test_validation_error_stream_preserves_form_data(templates_dir: Path):
-    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
+    templates = TurboTemplates(directory=str(templates_dir))
     app = FastAPI()
     app.add_middleware(SessionMiddleware, secret_key="x")
 
@@ -91,7 +91,7 @@ def test_validation_error_stream_preserves_form_data(templates_dir: Path):
 
 
 def test_error_formatter_override(templates_dir: Path):
-    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
+    templates = TurboTemplates(directory=str(templates_dir))
     app = FastAPI()
 
     def my_formatter(exc):

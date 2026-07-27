@@ -1,15 +1,12 @@
 """Turbo-aware ``Jinja2Templates`` wrapper.
 
-Adds three things to Starlette's ``Jinja2Templates``:
+Adds one method to Starlette's ``Jinja2Templates``:
 
-1. :meth:`TurboTemplates.render_fragment` returns an ``HTMLResponse``
-   containing one rendered template — useful for returning a partial
-   that carries a matching ``<turbo-frame>`` on frame requests.
-2. :meth:`TurboTemplates.render_stream` wraps a rendered template in a
+1. :meth:`TurboTemplates.render_stream` wraps a rendered template in a
    :class:`TurboStreamResponse` for the chosen Turbo Stream action.
-3. A ``flashes`` context processor that drains
-   ``request.session["_flash"]`` so any rendered template sees the
-   queue automatically.
+
+``render_string`` is also provided to render a template to a raw string
+for composing stream bodies.
 
 Fragment strategy is deliberately the application's business: point
 these helpers at partial template *files*. If you prefer carving
@@ -30,11 +27,11 @@ from typing import Any
 
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
-from starlette.responses import HTMLResponse
 
-from .flash import flashes_context_processor
 from .responses import TurboStreamResponse
-from .streams import _stream
+from .script import turbo_script
+from .streams import SELECTOR_ACTIONS, TEMPLATELESS_ACTIONS, _require_selector
+from .streams import stream as build_stream
 
 __all__ = ["TurboTemplates"]
 
@@ -44,13 +41,11 @@ PathLike = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
 
 
 class TurboTemplates(Jinja2Templates):
-    """``Jinja2Templates`` with Turbo helpers and a flash context processor.
+    """``Jinja2Templates`` with Turbo helpers.
 
     Construct as you would Starlette's ``Jinja2Templates``, plus an
     optional ``context_processors=[...]`` list of callables that take a
-    :class:`fastapi.Request` and return a context ``dict``. The flash
-    processor is registered automatically; pass ``flashes=False`` to opt
-    out (for tests or APIs that don't want session coupling).
+    :class:`fastapi.Request` and return a context ``dict``.
 
     The constructor checks ``self.env.autoescape`` and refuses to build
     if it's falsy at construction time — rendered output is interpolated
@@ -65,12 +60,9 @@ class TurboTemplates(Jinja2Templates):
         directory: PathLike | None = None,
         *,
         context_processors: Sequence[ContextProcessor] = (),
-        flashes: bool = True,
         **kwargs: Any,
     ) -> None:
         procs: list[ContextProcessor] = list(context_processors)
-        if flashes:
-            procs.insert(0, flashes_context_processor)
         if directory is None:
             super().__init__(context_processors=procs, **kwargs)
         else:
@@ -83,19 +75,12 @@ class TurboTemplates(Jinja2Templates):
                 "any user-supplied template variable into an XSS sink."
             )
         self._context_processors: list[ContextProcessor] = procs
-
-    def render_fragment(
-        self,
-        request: Request,
-        name: str,
-        *,
-        status_code: int = 200,
-        headers: dict[str, str] | None = None,
-        **context: Any,
-    ) -> HTMLResponse:
-        """Render a template (typically a partial) as an ``HTMLResponse``."""
-        body = self.render_string(request, name, **context)
-        return HTMLResponse(body, status_code=status_code, headers=headers)
+        # Jinja2's stubs type `Environment.globals` as a dict of its own
+        # built-in helpers (range, dict, cycler, ...), so assigning any
+        # custom global — however it's spelled — doesn't match that union.
+        self.env.globals.setdefault(  # ty: ignore[no-matching-overload]
+            "turbo_script", turbo_script
+        )
 
     def render_string(
         self,
@@ -121,12 +106,13 @@ class TurboTemplates(Jinja2Templates):
     ) -> TurboStreamResponse:
         """Render a template (typically a partial) and wrap it in a Turbo
         Stream action."""
-        body = self.render_string(request, name, **context)
-        if action == "remove":
-            stream = _stream("remove", target=target, targets=targets, html=None)
-        else:
-            stream = _stream(action, target=target, targets=targets, html=body)
-        return TurboStreamResponse(stream, status_code=status_code, headers=headers)
+        if action in SELECTOR_ACTIONS:
+            _require_selector(action, target, targets)
+        body = (
+            None if action in TEMPLATELESS_ACTIONS else self.render_string(request, name, **context)
+        )
+        element = build_stream(action, target=target, targets=targets, html=body)
+        return TurboStreamResponse(element, status_code=status_code, headers=headers)
 
     def _merged_context(self, request: Request, extra: dict[str, Any]) -> dict[str, Any]:
         ctx: dict[str, Any] = {"request": request}

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from fastapi import Request
 
 from .responses import TurboStreamResponse
-from .streams import _stream
+from .streams import stream as build_stream
 
 if TYPE_CHECKING:
     from pydantic import ValidationError
@@ -61,8 +61,8 @@ def validation_error_stream(
     context.update({"errors": errors, "form_data": resolved_form_data})
 
     body = templates.render_string(request, template, **context)
-    stream = _stream(action, target=target, targets=None, html=body)
-    return TurboStreamResponse(stream, status_code=422)
+    element = build_stream(action, target=target, targets=None, html=body)
+    return TurboStreamResponse(element, status_code=422)
 
 
 def _default_errors(exc: ValidationError) -> dict[str, str]:

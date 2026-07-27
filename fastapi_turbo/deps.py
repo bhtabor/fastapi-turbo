@@ -6,10 +6,46 @@ from dataclasses import dataclass
 
 from fastapi import Request
 
-__all__ = ["TurboContext", "turbo_context"]
+from .responses import TURBO_STREAM_MEDIA_TYPE
+
+__all__ = ["TurboContext", "accepts_turbo_stream", "turbo_context"]
 
 
-_STREAM_MEDIA_TYPE = "text/vnd.turbo-stream.html"
+def _explicit_quality(accept: str, media_type: str) -> float:
+    """The q-value the Accept header assigns to an *exact* media type.
+
+    Wildcard ranges (``*/*``, ``text/*``) deliberately don't count: for
+    Turbo detection, only an explicit mention of the stream media type
+    signals a Turbo client. Returns 0.0 when the type isn't listed.
+    """
+    best = 0.0
+    for part in accept.split(","):
+        segments = part.split(";")
+        if segments[0].strip().lower() != media_type:
+            continue
+        q = 1.0
+        for param in segments[1:]:
+            key, _, value = param.partition("=")
+            if key.strip().lower() == "q":
+                try:
+                    q = max(0.0, min(1.0, float(value.strip())))
+                except ValueError:
+                    q = 0.0
+        best = max(best, q)
+    return best
+
+
+def accepts_turbo_stream(request: Request) -> bool:
+    """True when the client explicitly accepts Turbo Stream responses.
+
+    Capability detection, not preference negotiation: any request whose
+    Accept header explicitly lists ``text/vnd.turbo-stream.html`` with a
+    non-zero q-value understands streams — even if it ranks ``text/html``
+    higher. Wildcards don't count (``Accept: */*`` API clients stay on
+    the HTML path), and ``;q=0`` is an explicit opt-out.
+    """
+    accept = request.headers.get("accept", "")
+    return _explicit_quality(accept, TURBO_STREAM_MEDIA_TYPE) > 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,23 +53,19 @@ class TurboContext:
     """Read-only summary of how the current request relates to Turbo.
 
     Attributes:
-        is_frame: True if the request was issued by a ``<turbo-frame>``
-            (the ``Turbo-Frame`` header is present).
-        frame_id: The ``id`` of the frame that initiated the request,
-            or ``None`` for non-frame requests.
-        accepts_stream: True if the client's ``Accept`` header includes
-            ``text/vnd.turbo-stream.html``. Turbo sends this on form
-            submissions; a normal page navigation doesn't.
-        is_visit: True for a top-level Turbo visit (``Sec-Fetch-Mode``
-            is ``navigate`` AND there's no ``Turbo-Frame`` header).
-            Useful when you want to render the chrome only on real
-            navigations.
+        is_frame_request: True if the request was issued by a
+            ``<turbo-frame>`` (the ``Turbo-Frame`` header is present).
+        frame_request_id: The ``id`` of the frame that initiated the
+            request, or ``None`` for non-frame requests.
+        accepts_stream: True if the client explicitly lists the Turbo
+            Stream media type in its Accept header (with non-zero q).
+            Turbo advertises this on form submissions; a normal page
+            navigation doesn't.
     """
 
     accepts_stream: bool
-    frame_id: str | None
-    is_frame: bool
-    is_visit: bool
+    frame_request_id: str | None
+    is_frame_request: bool
 
 
 async def turbo_context(request: Request) -> TurboContext:
@@ -50,12 +82,9 @@ async def turbo_context(request: Request) -> TurboContext:
             if turbo.accepts_stream:
                 ...
     """
-    frame_id = request.headers.get("turbo-frame")
-    accept = request.headers.get("accept", "")
-    sec_fetch_mode = request.headers.get("sec-fetch-mode", "")
+    frame_request_id = request.headers.get("turbo-frame")
     return TurboContext(
-        accepts_stream=_STREAM_MEDIA_TYPE in accept,
-        frame_id=frame_id,
-        is_frame=frame_id is not None,
-        is_visit=frame_id is None and sec_fetch_mode == "navigate",
+        accepts_stream=accepts_turbo_stream(request),
+        frame_request_id=frame_request_id,
+        is_frame_request=frame_request_id is not None,
     )

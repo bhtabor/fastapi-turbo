@@ -44,3 +44,18 @@ def test_response_class_sets_content_type_header_on_endpoint():
     response = client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/vnd.turbo-stream.html")
+
+
+def test_stream_response_sets_vary_accept():
+    resp = TurboStreamResponse("<turbo-stream></turbo-stream>")
+    assert resp.headers["vary"] == "Accept"
+
+
+def test_stream_response_merges_existing_vary():
+    resp = TurboStreamResponse("x", headers={"Vary": "Cookie"})
+    assert resp.headers["vary"] == "Cookie, Accept"
+
+
+def test_stream_response_vary_is_idempotent():
+    resp = TurboStreamResponse("x", headers={"Vary": "accept"})
+    assert resp.headers["vary"] == "accept"

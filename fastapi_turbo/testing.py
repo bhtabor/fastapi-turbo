@@ -26,7 +26,7 @@ __all__ = [
     "turbo_stream_request",
 ]
 
-_STREAM_MEDIA_TYPE = "text/vnd.turbo-stream.html"
+from .responses import TURBO_STREAM_MEDIA_TYPE as _STREAM_MEDIA_TYPE
 
 _STREAM_RE = re.compile(
     r"<turbo-stream\s+(?P<attrs>[^>]*?)>"

@@ -12,3 +12,18 @@ Initial release of `fastapi-turbo`, a rename and refocus of
 - Changed: `render_stream(...)` and the new `render_fragment(...)` /
   `render_string(...)` render template files; `forms.validation_error_stream`
   lost its `block=` parameter.
+- Added: `streams.stream(action, ...)` — a permissive generic entry point:
+  any action (including custom client-side `Turbo.StreamActions`),
+  `remove`/`refresh` silently ignore content, all other actions always carry
+  a `<template>`. Named builders encode built-in requirements in their
+  signatures; `replace`/`update` accept `method="morph"`.
+- Added: `turbo_script()` template helper (auto-registered Jinja global) that
+  loads Turbo and exposes `window.Turbo`.
+- Added: `accepts_turbo_stream(request)` and `TURBO_STREAM_MEDIA_TYPE` public
+  exports.
+- Changed: `TurboContext.accepts_stream` uses real Accept-header parsing
+  (explicit media type with non-zero q) instead of a substring check —
+  `Accept: */*` no longer counts, `;q=0` is honored.
+- Added: cache correctness for header-varied responses — `TurboStreamResponse`
+  sets `Vary: Accept`, `render_fragment` sets `Vary: Turbo-Frame`, and the
+  merging `append_vary(headers, value)` helper is exported.

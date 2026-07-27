@@ -5,7 +5,7 @@
 [![CI](https://github.com/bhtabor/fastapi-turbo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhtabor/fastapi-turbo/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/pypi/l/fastapi-turbo?cacheSeconds=300)](LICENSE)
 
-`fastapi-turbo` brings [Hotwire Turbo](https://turbo.hotwired.dev/) to FastAPI. Render targeted DOM updates with `<turbo-stream>` responses, serve partials for `<turbo-frame>` requests, queue session-backed flash messages, and validate forms in place — all from your existing FastAPI handlers, with no JSON layer or client-side framework. Ships with pytest helpers and a `Protocol`-based design so you can swap template engines or session backends.
+`fastapi-turbo` brings [Hotwire Turbo](https://turbo.hotwired.dev/) to FastAPI. Render targeted DOM updates with `<turbo-stream>` responses, serve partials for `<turbo-frame>` requests, and validate forms in place — all from your existing FastAPI handlers, with no JSON layer or client-side framework. Ships with pytest helpers and a `Protocol`-based design so you can swap template engines or session backends.
 
 Inspired by [fastapi-hotwire](https://github.com/socialpyre/fastapi-hotwire).
 
@@ -30,7 +30,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi_turbo import TurboStreamResponse, TurboTemplates, streams
 
 app = FastAPI()
-templates = TurboTemplates(directory="templates", flashes=False)
+templates = TurboTemplates(directory="templates")
 todos: list[dict] = []
 
 
@@ -65,10 +65,10 @@ def delete(todo_id: int):
 | Module | What it does |
 | --- | --- |
 | [`TurboStreamResponse`](#turbostreamresponse) | A `Response` subclass with `Content-Type: text/vnd.turbo-stream.html`. |
-| [`streams`](#streams) | Pure-function builders for `<turbo-stream>` actions (`append`, `prepend`, `replace`, `update`, `remove`, `before`, `after`, `refresh`). |
-| [`TurboContext`](#turbocontext) | A FastAPI dependency that summarizes how the current request relates to Turbo (frame? stream? top-level visit?). |
-| [`TurboTemplates`](#turbotemplates) | A `Jinja2Templates` wrapper that adds `render_fragment(...)` and `render_stream(...)`, plus an automatic `flashes` context processor. |
-| [`flash` / `get_flashed`](#flash) | Session-backed flash messages with both a redirect-style and a Turbo-native turbo-stream flow. |
+| [`streams`](#streams) | Builders for `<turbo-stream>` actions — the eight built-ins, `method="morph"`, and custom actions via `streams.stream(...)`. |
+| [`TurboContext`](#turbocontext) | A FastAPI dependency that summarizes how the current request relates to Turbo (frame request? stream-capable?), plus `accepts_turbo_stream(request)` for imperative checks. |
+| [`TurboTemplates`](#turbotemplates) | A `Jinja2Templates` wrapper that adds `render_fragment(...)` and `render_stream(...)`, plus an automatic `turbo_script` template global. |
+| [`turbo_script`](#turbo_script) | One line in `<head>` loads Turbo from the CDN (or your own URL) and exposes `window.Turbo`. |
 | [`forms`](#forms) | A Pydantic `ValidationError` → turbo-stream renderer for in-place form validation. |
 | [`testing`](#testing) | pytest assertions and request helpers (`assert_turbo_stream`, `parse_streams`, `assert_turbo_frame`, `turbo_frame_request`, `turbo_stream_request`). |
 
@@ -97,13 +97,24 @@ Each builder returns a `markupsafe.Markup` so it composes safely with Jinja temp
 ```python
 from fastapi_turbo import streams
 
-streams.append("<li>...</li>", target="todos")
-streams.replace(form_html, target="contact-form")
-streams.remove(target="todo-42")
-streams.refresh()  # Turbo 8 page-refresh
+streams.append("<li>...</li>", target="items")
+streams.replace(form_html, target="contact-form", method="morph")  # Turbo 8 morphing
+streams.remove(target="item-42")
+streams.refresh(request_id=request.headers.get("x-turbo-request-id"))
 ```
 
-The `html` argument is interpolated **verbatim** into the `<template>` envelope. It must be safe HTML (Jinja autoescaped output is safe). Attribute values (`target=`, `targets=`) are HTML-escaped automatically.
+The named builders encode each action's requirements in their signatures (`remove` takes no content, `refresh` takes neither content nor selector), while the generic `streams.stream(action, ...)` is permissive and works for **custom actions** too:
+
+```python
+streams.stream("highlight", target="item-7")
+# <turbo-stream action="highlight" target="item-7"><template></template></turbo-stream>
+# pairs with:
+#   Turbo.StreamActions.highlight = function () {
+#     this.targetElements.forEach((el) => el.classList.add("highlight"));
+#   };
+```
+
+The `html` argument is interpolated **verbatim** into the `<template>` envelope. It must be safe HTML (Jinja autoescaped output is safe). Attribute values (`action=`, `target=`, `targets=`, `method=`, `request-id=`) are HTML-escaped automatically.
 
 ## TurboContext
 
@@ -115,14 +126,16 @@ from fastapi_turbo import TurboContext, turbo_context
 
 @app.post("/items")
 async def create(turbo: Annotated[TurboContext, Depends(turbo_context)]):
-    if turbo.is_frame:
+    if turbo.is_frame_request:
         return frame_response(...)
     if turbo.accepts_stream:
         return stream_response(...)
     return full_page_response(...)
 ```
 
-Fields: `is_frame`, `frame_id`, `accepts_stream`, `is_visit`.
+Fields: `is_frame_request`, `frame_request_id`, `accepts_stream`.
+
+`accepts_stream` is capability detection with real Accept-header parsing: it's true only when the client *explicitly* lists `text/vnd.turbo-stream.html` with a non-zero q-value. `Accept: */*` API clients stay on the HTML path, and `;q=0` is honored as an opt-out. The standalone `accepts_turbo_stream(request)` function exposes the same check for imperative use.
 
 ## TurboTemplates
 
@@ -152,7 +165,20 @@ def create(request: Request, text: str = Form(...)):
     )
 ```
 
-The `flashes` context processor is registered automatically; pass `flashes=False` to opt out.
+## turbo_script
+
+```html
+<head>
+  {{ turbo_script() }}
+</head>
+```
+
+Renders a `<script type="module">` that imports Turbo (pinned to the version this library is tested against) and exposes `window.Turbo` for custom stream-action registrations. `TurboTemplates` registers it as a Jinja global automatically; pass `version=` to pin differently or `url=` to load a self-hosted/vendored build:
+
+```python
+turbo_script(version="8.0.23")
+turbo_script(url="/static/vendor/turbo.js")
+```
 
 ### Fragments: files, not blocks
 
@@ -166,29 +192,6 @@ return TurboStreamResponse(streams.append(html, target="items"))
 ```
 
 (Heads-up: `jinja2-fragments` passes context as `**kwargs`, so context keys that collide with its positional parameter names — e.g. `environment` — need renaming.)
-
-## flash
-
-```python
-from fastapi_turbo import flash, get_flashed
-
-
-# 1. Classic post-redirect-get flow:
-@app.post("/save")
-def save(request: Request):
-    flash(request, "Saved", category="success")
-    return RedirectResponse("/", status_code=303)
-
-
-# 2. Turbo-native: respond with a stream that appends to #flash without redirecting:
-@app.post("/save")
-def save(request: Request):
-    return flash.stream(request, "Saved", category="success")
-```
-
-Templates rendered through `TurboTemplates` automatically receive the queued `flashes` list.
-
-A complete runnable example lives in [`examples/flash/`](examples/flash).
 
 ## forms
 
@@ -240,12 +243,11 @@ You don\'t need to use the bundled Jinja2 / Starlette code paths to use this lib
 
 ## Examples
 
-Two full runnable examples live under [`examples/`](examples):
+A full runnable example lives under [`examples/`](examples):
 
 - [`examples/minimal/`](examples/minimal) — A todo list with turbo-stream append + remove. The simplest possible integration.
-- [`examples/flash/`](examples/flash) — Session-backed flash messages, with both a PRG and a Turbo-native flow.
 
-Run either with `uv run uvicorn app:app --reload` from inside the example directory.
+The example's own README has the exact `uv run --with ...` command — the packages needed beyond `fastapi-turbo` itself (an ASGI server, `python-multipart` for form parsing, etc.).
 
 ## Roadmap
 

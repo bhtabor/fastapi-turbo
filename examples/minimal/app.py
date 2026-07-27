@@ -2,7 +2,7 @@
 
 Run with::
 
-    uv run uvicorn app:app --reload
+    uv run --with uvicorn --with python-multipart uvicorn app:app --reload
 
 Then open http://127.0.0.1:8000.
 """
@@ -17,7 +17,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi_turbo import TurboStreamResponse, TurboTemplates, streams
 
 app = FastAPI()
-templates = TurboTemplates(directory=str(Path(__file__).parent / "templates"), flashes=False)
+templates = TurboTemplates(directory=str(Path(__file__).parent / "templates"))
 
 # In-memory store for the demo. Real apps would use a database.
 _id = count(1)

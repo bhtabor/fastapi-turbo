@@ -5,9 +5,31 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
+from starlette.datastructures import MutableHeaders
 from starlette.responses import Response
 
-__all__ = ["TurboStreamResponse"]
+__all__ = ["TURBO_STREAM_MEDIA_TYPE", "TurboStreamResponse", "append_vary"]
+
+# The media type Turbo advertises on form submissions and expects on
+# stream responses.
+TURBO_STREAM_MEDIA_TYPE = "text/vnd.turbo-stream.html"
+
+
+def append_vary(headers: MutableHeaders, value: str) -> None:
+    """Add ``value`` to the response's ``Vary`` header (idempotent).
+
+    Endpoints that answer differently based on a request header (the
+    ``Accept`` negotiation for streams, the ``Turbo-Frame`` header for
+    frames) must declare it, or an HTTP cache may serve one variant to
+    the other kind of client.
+    """
+    existing = headers.get("vary")
+    if existing is None:
+        headers["vary"] = value
+        return
+    tokens = {token.strip().lower() for token in existing.split(",")}
+    if value.lower() not in tokens:
+        headers["vary"] = f"{existing}, {value}"
 
 
 class TurboStreamResponse(Response):
@@ -21,11 +43,15 @@ class TurboStreamResponse(Response):
     separator, no extra escaping, since each builder already produces
     well-formed ``<turbo-stream>`` markup.
 
+    Sets ``Vary: Accept``, since stream endpoints are conventionally
+    negotiated from the Accept header — a cache must not serve the
+    stream variant to an HTML client or vice versa.
+
     Use as ``response_class=TurboStreamResponse`` on a route to have
     OpenAPI document the response media type, or instantiate directly.
     """
 
-    media_type = "text/vnd.turbo-stream.html"
+    media_type = TURBO_STREAM_MEDIA_TYPE
 
     def __init__(
         self,
@@ -44,3 +70,4 @@ class TurboStreamResponse(Response):
             media_type=media_type,
             background=background,
         )
+        append_vary(self.headers, "Accept")

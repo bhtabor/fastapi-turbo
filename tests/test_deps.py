@@ -18,10 +18,9 @@ def client():
     @app.get("/")
     async def root(turbo: Annotated[TurboContext, Depends(turbo_context)]):
         return {
-            "is_frame": turbo.is_frame,
-            "frame_id": turbo.frame_id,
+            "is_frame_request": turbo.is_frame_request,
+            "frame_request_id": turbo.frame_request_id,
             "accepts_stream": turbo.accepts_stream,
-            "is_visit": turbo.is_visit,
         }
 
     return TestClient(app)
@@ -30,18 +29,16 @@ def client():
 def test_no_turbo_headers(client):
     body = client.get("/").json()
     assert body == {
-        "is_frame": False,
-        "frame_id": None,
+        "is_frame_request": False,
+        "frame_request_id": None,
         "accepts_stream": False,
-        "is_visit": False,
     }
 
 
-def test_turbo_frame_header_marks_frame(client):
+def test_turbo_frame_header_marks_frame_request(client):
     body = client.get("/", headers={"Turbo-Frame": "sidebar"}).json()
-    assert body["is_frame"] is True
-    assert body["frame_id"] == "sidebar"
-    assert body["is_visit"] is False
+    assert body["is_frame_request"] is True
+    assert body["frame_request_id"] == "sidebar"
 
 
 def test_accepts_stream_via_accept_header(client):
@@ -59,12 +56,16 @@ def test_html_only_accept_does_not_accept_stream(client):
     assert body["accepts_stream"] is False
 
 
-def test_is_visit_when_navigate_and_no_frame(client):
-    body = client.get("/", headers={"Sec-Fetch-Mode": "navigate"}).json()
-    assert body["is_visit"] is True
-    assert body["is_frame"] is False
+def test_accept_q_zero_is_explicit_opt_out(client):
+    body = client.get("/", headers={"Accept": "text/vnd.turbo-stream.html;q=0, text/html"}).json()
+    assert body["accepts_stream"] is False
 
 
-def test_is_visit_false_when_frame_present(client):
-    body = client.get("/", headers={"Sec-Fetch-Mode": "navigate", "Turbo-Frame": "x"}).json()
-    assert body["is_visit"] is False
+def test_accept_wildcard_only_does_not_accept_stream(client):
+    body = client.get("/", headers={"Accept": "*/*"}).json()
+    assert body["accepts_stream"] is False
+
+
+def test_accept_media_type_is_case_insensitive(client):
+    body = client.get("/", headers={"Accept": "TEXT/VND.Turbo-Stream.HTML"}).json()
+    assert body["accepts_stream"] is True

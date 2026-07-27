@@ -5,7 +5,7 @@ requires = [ "hatchling" ]
 [project]
 name = "fastapi-turbo"
 version = "0.1.0"
-description = "Hotwire Turbo integration for FastAPI — turbo-stream responses, frame detection, flash messages, and test helpers."
+description = "Hotwire Turbo integration for FastAPI — turbo-stream responses, frame detection, and test helpers."
 readme = "README.md"
 keywords = [
   "fastapi",

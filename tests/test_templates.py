@@ -9,20 +9,12 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from starlette.middleware.sessions import SessionMiddleware
 
-from fastapi_turbo import TurboTemplates, flash
+from fastapi_turbo import TurboTemplates
 from fastapi_turbo.testing import assert_turbo_stream, parse_streams
 
 
 @pytest.fixture
 def templates_dir(tmp_path: Path) -> Path:
-    (tmp_path / "page.html").write_text(
-        "<html>"
-        "{% for f in flashes %}"
-        '<div class="flash flash-{{ f.category }}">{{ f.text }}</div>'
-        "{% endfor %}"
-        "{% block content %}<p>{{ message }}</p>{% endblock %}"
-        "</html>"
-    )
     (tmp_path / "row.html").write_text('<li id="item-{{ item.id }}">{{ item.name }}</li>')
     return tmp_path
 
@@ -36,8 +28,10 @@ def test_render_fragment_renders_partial_template(templates_dir: Path):
     def root(request: Request):
         return templates.render_fragment(request, "row.html", item={"id": 1, "name": "x"})
 
-    body = TestClient(app).get("/").text
-    assert body == '<li id="item-1">x</li>'
+    resp = TestClient(app).get("/")
+    assert resp.text == '<li id="item-1">x</li>'
+    vary_tokens = {t.strip().lower() for t in resp.headers["vary"].split(",")}
+    assert "turbo-frame" in vary_tokens
 
 
 def test_render_stream_returns_turbo_stream_response(templates_dir: Path):
@@ -64,30 +58,6 @@ def test_render_stream_returns_turbo_stream_response(templates_dir: Path):
     assert actions[0].content == '<li id="item-7">lucky</li>'
 
 
-def test_flash_context_processor_drains_session(templates_dir: Path):
-    templates = TurboTemplates(directory=str(templates_dir))
-    app = FastAPI()
-    app.add_middleware(SessionMiddleware, secret_key="test")
-
-    @app.post("/set")
-    def setter(request: Request):
-        flash(request, "Saved", category="success")
-        return {"ok": True}
-
-    @app.get("/")
-    def reader(request: Request):
-        return templates.TemplateResponse(request, "page.html", {"message": "hi"})
-
-    client = TestClient(app)
-    client.post("/set")
-    resp = client.get("/")
-    body = resp.text
-    assert '<div class="flash flash-success">Saved</div>' in body
-    # second read drains
-    resp2 = client.get("/")
-    assert "flash-" not in resp2.text
-
-
 def test_extra_context_processors_compose(templates_dir: Path):
     def brand_ctx(request: Request) -> dict[str, object]:
         return {"brand": "Hotwire"}
@@ -106,18 +76,3 @@ def test_extra_context_processors_compose(templates_dir: Path):
 
     body = TestClient(app).get("/").text
     assert body == "Hello Hotwire, world."
-
-
-def test_flashes_off_skips_session_dependency(templates_dir: Path):
-    """With flashes=False the templates can render without SessionMiddleware."""
-    (templates_dir / "plain.html").write_text("<p>{{ message }}</p>")
-    templates = TurboTemplates(directory=str(templates_dir), flashes=False)
-
-    app = FastAPI()  # no SessionMiddleware
-
-    @app.get("/")
-    def root(request: Request):
-        return templates.TemplateResponse(request, "plain.html", {"message": "ok"})
-
-    body = TestClient(app).get("/").text
-    assert body == "<p>ok</p>"

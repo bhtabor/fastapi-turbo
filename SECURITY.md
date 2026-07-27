@@ -27,7 +27,6 @@ The package ships a few primitives where security expectations are explicit and 
 
 - **`fastapi_turbo.streams`** — the trust contract for the `html` argument (raw, un-escaped) and the attribute-escaping path for `target` / `targets` / `request_id`.
 - **`fastapi_turbo.templates.TurboTemplates`** — the autoescape assertion at construction time.
-- **`fastapi_turbo.flash`** — flash content rides in a signed-but-not-encrypted session cookie; the doc strings call out what is and isn't safe to put there.
 
 If you find a way to bypass any of those guarantees, that's exactly the kind of report that's most useful.
 

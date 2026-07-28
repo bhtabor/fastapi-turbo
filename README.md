@@ -270,4 +270,4 @@ This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md) Code of Cond
 
 ## License
 
-[MIT](LICENSE) © 2026 Pyre. `fastapi-turbo` began as a rename-and-refocus of [fastapi-hotwire](https://github.com/socialpyre/fastapi-hotwire).
+[MIT](LICENSE) `fastapi-turbo` began as a rename-and-refocus of [fastapi-hotwire](https://github.com/socialpyre/fastapi-hotwire).

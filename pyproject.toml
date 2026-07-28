@@ -18,8 +18,7 @@ keywords = [
 license = "MIT"
 license-files = [ "LICENSE" ]
 authors = [
-  { name = "Dane Thurber", email = "dane.thurber@gmail.com" },
-  { name = "Pyre" },
+  { name = "Biruk H. Tabor" },
 ]
 requires-python = ">=3.10"
 classifiers = [

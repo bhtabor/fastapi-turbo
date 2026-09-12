@@ -94,9 +94,10 @@ class TurboTemplates(Jinja2Templates):
     ) -> HTMLResponse:
         """Render a template (typically a partial) as an ``HTMLResponse``.
 
-        Sets ``Vary: Turbo-Frame``: fragment responses are conventionally
-        served when the ``Turbo-Frame`` header is present, so caches must
-        key on it.
+        Declares ``Vary: Turbo-Frame``: a fragment response is the frame
+        representation of its URL. A full-page navigation hits the same
+        URL and would receive a different body, so a cache must key the
+        two variants separately.
         """
         body = self.render_string(request, name, **context)
         response = HTMLResponse(body, status_code=status_code, headers=headers)

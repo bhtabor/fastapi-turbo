@@ -27,3 +27,8 @@ Initial release of `fastapi-turbo`, a rename and refocus of
 - Added: cache correctness for header-varied responses — `TurboStreamResponse`
   sets `Vary: Accept`, `render_fragment` sets `Vary: Turbo-Frame`, and the
   merging `append_vary(headers, value)` helper is exported.
+- Removed: `TurboContext.is_visit` (previously derived from
+  `Sec-Fetch-Mode`) and the session-backed `flash` module (`flash`,
+  `get_flashed`, `FlashMessage`, the automatic `flashes` context
+  processor, `examples/flash`). `TurboTemplates` no longer touches
+  `request.session`; apps needing flash messaging own that plumbing.

@@ -43,9 +43,10 @@ class TurboStreamResponse(Response):
     separator, no extra escaping, since each builder already produces
     well-formed ``<turbo-stream>`` markup.
 
-    Sets ``Vary: Accept``, since stream endpoints are conventionally
-    negotiated from the Accept header — a cache must not serve the
-    stream variant to an HTML client or vice versa.
+    Declares ``Vary: Accept``: this response is the stream
+    representation of its URL. An HTML client hitting the same URL
+    receives a different body, so a cache must keep the two variants
+    separate.
 
     Use as ``response_class=TurboStreamResponse`` on a route to have
     OpenAPI document the response media type, or instantiate directly.

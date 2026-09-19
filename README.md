@@ -17,10 +17,20 @@ pip install fastapi-turbo
 uv add fastapi-turbo
 ```
 
+For the latest unreleased changes, install directly from the repository:
+
+```bash
+pip install git+https://github.com/bhtabor/fastapi-turbo
+# or
+uv add git+https://github.com/bhtabor/fastapi-turbo
+```
+
 For the Pydantic-backed validation-error stream:
 
 ```bash
 pip install "fastapi-turbo[forms]"
+# or
+uv add "fastapi-turbo[forms]"
 ```
 
 ## Quickstart
